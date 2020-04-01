@@ -22,7 +22,7 @@ vet:
 	go vet ./...
 
 lint:
-	golint -set_exit_status ./...
+	golint -set_exit_status ./cli ./internal
 
 .PHONY: build
 build:

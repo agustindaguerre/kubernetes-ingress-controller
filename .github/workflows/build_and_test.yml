@@ -1,0 +1,65 @@
+name: Build & Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Echo workspace
+        run: echo $GITHUB_WORKSPACE
+
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: go info
+        run: |
+          echo $(go version) at $(which go)
+          echo go version: $(go version)
+          echo go env: $(go env GOPATH)
+          echo cache: $(ls $RUNNER_TOOL_CACHE/go)
+
+      - name: setup env
+        run: |
+          echo "::set-env name=GOPATH::${{ github.workspace }}/go"
+          echo "::add-path::${{ github.workspace }}/go/bin"
+
+      - name: go install
+        uses: actions/setup-go@v2-beta
+        with:
+          go-version: "^1.14"
+
+      - name: go info
+        run: |
+          echo $(go version) at $(which go)
+          echo go version: $(go version)
+          echo cache: $(ls $RUNNER_TOOL_CACHE/go)
+          echo $(ls)
+
+      - name: Verify codegen
+        run: make verify-codegen
+
+      - name: golint install
+        run: |
+          echo $(ls)
+          go get golang.org/x/lint/golint
+
+      - name: Test all
+        run: |
+          sudo rm -rf go
+          echo $(ls)
+          make test-all
+
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Verify codegen
+        run: .ci/build-master.sh
